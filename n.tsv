@@ -1,0 +1,36 @@
+id	name	kind
+Compound::DB00001	Aspirin	Compound
+Compound::DB00002	Ibuprofen	Compound
+Compound::DB00003	Metformin	Compound
+Compound::DB00004	Warfarin	Compound
+Compound::DB00005	Paracetamol	Compound
+Gene::1001	BRCA1	Gene
+Gene::1002	TP53	Gene
+Gene::1003	EGFR	Gene
+Gene::1004	KRAS	Gene
+Gene::1005	MYC	Gene
+Gene::2001	HER2	Gene
+Gene::2002	ALK	Gene
+Gene::2003	BRAF	Gene
+Gene::2004	PIK3CA	Gene
+Gene::3001	AKT1	Gene
+Gene::3002	PTEN	Gene
+Gene::3003	NRAS	Gene
+Gene::4001	CDK4	Gene
+Gene::4002	CDKN2A	Gene
+Gene::5001	RB1	Gene
+Gene::6001	NOTCH1	Gene
+Gene::7001	JAK2	Gene
+Gene::7002	STAT3	Gene
+Disease::DOID:1001	Breast Cancer	Disease
+Disease::DOID:1002	Lung Cancer	Disease
+Disease::DOID:2001	Type 2 Diabetes	Disease
+Disease::DOID:2002	Heart Disease	Disease
+Disease::DOID:2003	Hypertension	Disease
+Disease::DOID:3001	Liver Disease	Disease
+Disease::DOID:4001	Stroke	Disease
+Disease::DOID:5001	Arthritis	Disease
+Disease::DOID:5002	Asthma	Disease
+Disease::DOID:5003	Migraine	Disease
+Disease::DOID:5004	Fever	Disease
+Anatomy::UBERON:0000948	Heart	Anatomy
