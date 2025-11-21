@@ -12,79 +12,79 @@ def map_q1(line):
         # Check for compound-gene relationships
         if source.startswith("Compound::") and target.startswith("Gene::"):
             if metaedge in ["CuG", "CdG"]:
-                return [(source, "gene")]
+                return [(source, ("gene", target))]  # CHANGED: Keep target ID
 
         # Check for compound-disease relationships
         elif source.startswith("Compound::") and target.startswith("Disease::"):
             if metaedge in ["CtD", "CpD"]:
-                return [(source, "disease")]
+                return [(source, ("disease", target))]  # CHANGED: Keep target ID
     return []
 
 
 def format_q1(item):
-    # Extract compound and its type counts
-    compound, type_counts = item
-    genes = 0
-    diseases = 0
+    # Extract compound and its relationships
+    compound, relationships = item
 
-    # Count genes and diseases separately
-    for entity_type, count in type_counts:
-        if entity_type == "gene":
-            genes = count
-        elif entity_type == "disease":
-            diseases = count
+    # Use set() to count UNIQUE genes and diseases
+    genes = len(set([rel[1] for rel in relationships if rel[0] == "gene"]))
+    diseases = len(set([rel[1] for rel in relationships if rel[0] == "disease"]))
 
     return (compound, genes, diseases)
-
-
-def add_count(pair):
-    return (pair, 1)
-
-
-def sum_counts(a, b):
-    return a + b
-
-
-def filter_header(line, header):
-    return line != header
-
-
-def reorganize_by_compound(item):
-    return (item[0][0], (item[0][1], item[1]))
 
 
 def get_gene_count(item):
     return item[1]
 
 
+def parse_node(line):
+    # Extract compound ID and name from nodes file
+    parts = line.split("\t")
+    if len(parts) == 3:
+        node_id, name, kind = parts
+        if kind == "Compound":
+            return [(node_id, name)]
+    return []
+
+
 def run_q1(sc):
     # Read edges file
-    edges = sc.textFile("e.tsv")
+    edges = sc.textFile("edges.tsv")
     header = edges.first()
     edges = edges.filter(lambda line: line != header)
 
     # Map: extract compound-gene and compound-disease pairs
     mapped = edges.flatMap(map_q1)
 
-    # Reduce: count occurrences of each pair
-    counts = mapped.map(add_count).reduceByKey(sum_counts)
+    # Reduce: group all relationships by compound
+    by_compound = mapped.groupByKey()
 
-    # Group by compound
-    by_compound = counts.map(reorganize_by_compound).groupByKey()
-
-    # Format results
+    # Format: count unique genes and diseases
     results = by_compound.map(format_q1)
 
-    # Sort by gene count and collect top 5
-    sorted_results = results.sortBy(get_gene_count, ascending=False).collect()
+    # Read nodes file to get compound names
+    nodes = sc.textFile("nodes.tsv")
+    nodes_header = nodes.first()
+    nodes = nodes.filter(lambda line: line != nodes_header)
+
+    # Create dictionary of compound IDs to names
+    names = dict(nodes.flatMap(parse_node).collect())
+
+    # Join compound IDs with names
+    results_with_names = []
+    for compound_id, genes, diseases in results.collect():
+        name = names.get(compound_id, compound_id)
+        results_with_names.append((name, genes, diseases))
+
+    # Sort by gene count
+    results_with_names.sort(key=lambda x: (-x[1], -x[2], x[0]))
 
     # Print results
     print("\nQ1 Results:")
-    print(f"{'Compound':<30} {'Genes':<10} {'Diseases':<10}")
-    for compound, genes, diseases in sorted_results[:5]:
-        print(f"{compound:<30} {genes:<10} {diseases:<10}")
+    print(f"{'Compound Name':<40} {'Genes':<10} {'Diseases':<10}")
+    for name, genes, diseases in results_with_names[:5]:
+        print(f"{name:<40} {genes:<10} {diseases:<10}")
 
-    return sorted_results
+    return results_with_names
 
 
 # Q2: Count disease distribution
@@ -111,13 +111,17 @@ def flip_to_count(item):
     return (count, 1)
 
 
+def sum_counts(a, b):
+    return a + b
+
+
 def get_disease_count(item):
     return item[1]
 
 
 def run_q2(sc):
     # Read edges file
-    edges = sc.textFile("e.tsv")
+    edges = sc.textFile("edges.tsv")
     header = edges.first()
     edges = edges.filter(lambda line: line != header)
 
@@ -145,19 +149,9 @@ def run_q2(sc):
 # Q3: Get compound names
 
 
-def parse_node(line):
-    # Extract compound ID and name from nodes file
-    parts = line.split("\t")
-    if len(parts) == 3:
-        node_id, name, kind = parts
-        if kind == "Compound":
-            return [(node_id, name)]
-    return []
-
-
 def run_q3(sc, q1_results):
     # Read nodes file
-    nodes = sc.textFile("n.tsv")
+    nodes = sc.textFile("nodes.tsv")
     header = nodes.first()
     nodes = nodes.filter(lambda line: line != header)
 
