@@ -1,10 +1,10 @@
 from pyspark import SparkContext, SparkConf
 
 
-# HELPER: Load Node Names
+# helper: load node names
 def parse_node(line):
     """Extracts (ID, Name) from nodes.tsv"""
-    line = line.strip()  # Remove invisible whitespace
+    line = line.strip()  # remove whitespace
     parts = line.split("\t")
     if len(parts) == 3:
         node_id, name, kind = parts
@@ -17,9 +17,9 @@ def load_names(sc):
     """Creates a dictionary of Drug ID -> Drug Name"""
     nodes = sc.textFile("nodes.tsv")
     header = nodes.first()
-    nodes = nodes.filter(lambda line: line != header)  # Skip header
+    nodes = nodes.filter(lambda line: line != header)  # skip header
 
-    # Collect results into a Python Dictionary for fast lookup
+    # collect results into a Python Dictionary for fast lookup
     names_rdd = nodes.flatMap(parse_node)
     return dict(names_rdd.collect())
 
@@ -32,13 +32,12 @@ def map_q1(line):
     if len(parts) == 3:
         source, metaedge, target = parts
 
-        # LOGIC: Check for Drug -> Gene interactions
+        # check for drug -> gene interactions
         if source.startswith("Compound::") and target.startswith("Gene::"):
-            # CRITICAL: Include 'CbG' (Binds) along with Up/Down regulation
             if metaedge in ["CuG", "CdG", "CbG"]:
                 return [(source, ("gene", target))]
 
-        # LOGIC: Check for Drug -> Disease interactions
+        # Check for drug -> disease interactions
         elif source.startswith("Compound::") and target.startswith("Disease::"):
             if metaedge in ["CtD", "CpD"]:
                 return [(source, ("disease", target))]
@@ -48,7 +47,7 @@ def map_q1(line):
 def run_q1(sc, names_dict):
     edges = sc.textFile("edges.tsv")
     header = edges.first()
-    edges = edges.filter(lambda line: line != header)  # Remove header
+    edges = edges.filter(lambda line: line != header)  # remove header
 
     # 1. Map edges to (DrugID, (Type, TargetID))
     mapped = edges.flatMap(map_q1)
@@ -56,7 +55,7 @@ def run_q1(sc, names_dict):
     # 2. Group all targets by DrugID
     grouped = mapped.groupByKey()
 
-    # 3. Reducer: Count UNIQUE targets
+    # 3. Reducer: Count unique targets
     def count_distinct_entities(item):
         compound, values = item
         genes = set()  # Use Set to remove duplicates automatically
@@ -155,13 +154,11 @@ def run_q3(sc, q1_results, names_dict):
     return results
 
 
-# MAIN EXECUTION
-
 if __name__ == "__main__":
-    # Standard Spark Setup
+    # Spark Setup
     conf = SparkConf().setAppName("HetIONet").setMaster("local[*]")
     sc = SparkContext(conf=conf)
-    sc.setLogLevel("ERROR")  # Hide detailed logs
+    sc.setLogLevel("ERROR")
 
     print("Starting Spark Job...")
 
