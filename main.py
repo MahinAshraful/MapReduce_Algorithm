@@ -75,9 +75,9 @@ def run_q1(sc, names_dict):
     # 4. Sort by Gene Count (High to Low)
     sorted_results = results.sortBy(lambda x: x[1], ascending=False).collect()
 
-    print("\n" + "=" * 40)
+    print("\n" + " " * 40)
     print("Q1 Results (Top 5)")
-    print("=" * 40)
+    print(" " * 40)
     print(f"{'Compound Name':<30} {'Genes':<10} {'Diseases':<10}")
 
     for compound, genes, diseases in sorted_results[:5]:
@@ -121,9 +121,9 @@ def run_q2(sc):
 
     sorted_dist = distribution.sortBy(lambda x: x[1], ascending=False).collect()
 
-    print("\n" + "=" * 40)
+    print("\n" + " " * 40)
     print("Q2 Results (Top 5)")
-    print("=" * 40)
+    print(" " * 40)
     print(f"{'# Compounds':<15} {'# Diseases':<15}")
     for count, num_diseases in sorted_dist[:5]:
         print(f"{count:<15} {num_diseases:<15}")
@@ -145,9 +145,9 @@ def run_q3(sc, q1_results, names_dict):
     # Sort Descending by Gene Count
     results.sort(key=lambda x: x[1], reverse=True)
 
-    print("\n" + "=" * 40)
+    print("\n" + " " * 40)
     print("Q3 Results (Top 5)")
-    print("=" * 40)
+    print(" " * 40)
     print(f"{'Compound Name':<40} {'Gene Count':<10}")
     for name, genes in results[:5]:
         print(f"{name:<40} {genes:<10}")
