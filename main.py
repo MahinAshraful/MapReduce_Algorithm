@@ -103,21 +103,23 @@ def map_q2(line):
 
 
 def run_q2(sc):
+    # Ingest Data
     edges = sc.textFile("edges.tsv")
     header = edges.first()
-    edges = edges.filter(lambda line: line != header)
+    edges = edges.filter(lambda line: line != header)  # Filter out the header row
 
+    # map : invert edges -> Turns rows into Key-Value pairs: (DiseaseID, DrugID)
     pairs = edges.flatMap(map_q2)
 
-    # 1. Count unique drugs per disease
-    # Result: (DiseaseA, 10 drugs), (DiseaseB, 5 drugs)...
+    # First Reduction, shuffles data so all drugs for one disease are on the same node
     per_disease = pairs.groupByKey().map(lambda x: (x[0], len(set(x[1]))))
+    # counts UNIQUE drugs per disease using a python set()
 
-    # 2. Create a Histogram (Distribution)
-    # Map (10 drugs, 1) -> ReduceByKey (Sum)
-    # Result: 5 diseases have 10 drugs associated
+    # Second Reduction -> Flips keys to group by the *Count* -> (Drug_Count, 1)
     distribution = per_disease.map(lambda x: (x[1], 1)).reduceByKey(lambda a, b: a + b)
+    # Sums the '1's to count how many diseases share that frequency
 
+    # Sort by the number of diseases (descending) to see the most common patterns
     sorted_dist = distribution.sortBy(lambda x: x[1], ascending=False).collect()
 
     print("\n" + " " * 40)
@@ -134,7 +136,7 @@ def run_q2(sc):
 
 
 def run_q3(sc, q1_results, names_dict):
-    # Q3 is essentially re-formatting Q1 results with names
+    # Q3 is similar to Q1
     results = []
     for compound_id, genes, diseases in q1_results:
         clean_id = compound_id.strip()
