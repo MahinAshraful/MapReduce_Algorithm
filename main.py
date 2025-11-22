@@ -3,7 +3,6 @@ from pyspark import SparkContext, SparkConf
 
 # helper: load node names
 def parse_node(line):
-    """Extracts (ID, Name) from nodes.tsv"""
     line = line.strip()  # remove whitespace
     parts = line.split("\t")
     if len(parts) == 3:
@@ -14,7 +13,6 @@ def parse_node(line):
 
 
 def load_names(sc):
-    """Creates a dictionary of Drug ID -> Drug Name"""
     nodes = sc.textFile("nodes.tsv")
     header = nodes.first()
     nodes = nodes.filter(lambda line: line != header)  # skip header
